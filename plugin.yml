@@ -1,0 +1,11 @@
+name: Github App Auth
+description: Authenticates with Github as a Github App and set the GH_TOKEN environment variable
+author: https://github.com/johnae
+requirements: ["openssl", "tr", date", "curl", "jq"]
+configuration:
+  properties:
+    installation_id:
+      type: number
+    app_id:
+      type: number
+  additionalProperties: false

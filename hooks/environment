@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+INSTALLATION_ID="$BUILDKITE_PLUGIN_GITHUB_APP_AUTH_INSTALLATION_ID"
+APP_ID="$BUILDKITE_PLUGIN_GITHUB_APP_AUTH_APP_ID"
+RSA_KEY_FILE="$GITHUB_APP_RSA_KEY_FILE"
+
+ISS="$APP_ID"
+IAT="$(date +%s)"
+## gnudate
+if date --version >/dev/null 2>&1; then
+  EXP="$(date -d "+10 minutes" +%s)"
+## bsddate
+else
+  EXP="$(date -v +10M +%s)"
+fi
+
+HEADER="$(echo -n '{"alg":"RS256","typ":"JWT"}' | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+PAYLOAD="$(echo -n '{"iss":'"$ISS"',"iat":'"$IAT"',"exp":'"$EXP"'}' | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+HEADER_PAYLOAD="$HEADER.$PAYLOAD"
+SIG="$(echo -n "$HEADER_PAYLOAD" | openssl dgst -sha256 -sign $RSA_KEY_FILE | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+TOKEN="$HEADER_PAYLOAD.$SIG"
+
+GH_TOKEN="$(curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/app/installations/"$INSTALLATION_ID"/access_tokens | jq -r .token)"
+
+buildkite-agent annotate "Authenticated as GitHub APP $APP_ID"
