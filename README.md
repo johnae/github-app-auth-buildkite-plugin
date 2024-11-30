@@ -18,7 +18,7 @@ the `GH_TOKEN` environment variable.
 steps:
   - label: ":github: Open Github Issue"
     plugins:
-      - johnae/github-app-auth#v1.0.0:
+      - johnae/github-app-auth#v1.0.1:
           installation_id: 123456
           app_id: 54321
     command: gh issue create --title "Example" --body "ignore me" --repo johnae/github-app-auth
